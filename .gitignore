@@ -1,0 +1,28 @@
+# Ignore Python virtual environments
+venv/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore system files (Mac & Windows)
+.DS_Store
+Thumbs.db
+
+# Ignore log files & temp files
+logs/
+*.log
+*.tmp
+
+# Ignore any credentials or environment variables
+.env
+secrets.json
+
+# Ignore Selenium WebDriver binaries (if downloaded)
+chromedriver
+geckodriver
