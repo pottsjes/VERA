@@ -3,6 +3,7 @@ import sqlite3
 from datetime import datetime
 from typing import List, Optional
 from models.constants import ITEM_TYPE
+from models.item import Item
 
 DB_NAME = "wardrobe.db"
 
@@ -27,6 +28,32 @@ def init_db():
         """)
         conn.commit()
 
+def map_item(row):
+    return Item(
+        id=row[0],
+        name=row[1],
+        item_type=row[2],
+        description=row[3],
+        tags=row[4].split(",") if row[4] else [],
+        image_path=row[5],
+        available=bool(row[6]),
+        last_used=row[7],
+        nfc_tag_id=row[8]
+    )
+
+def map_items(rows):
+    return [map_item(row) for row in rows]
+
+def add_item(item: Item):
+    add_item(
+        name=item.name,
+        item_type=item.item_type.value,
+        description=item.descriptionription,
+        tags=",".join(item.tags or []),
+        image_path=item.image_path,
+        nfc_tag_id=item.nfc_tag_id
+    )
+
 def add_item(name: str, item_type: ITEM_TYPE, description: str = "", tags: Optional[List[str]] = None,
              image_path: str = "", nfc_tag_id: Optional[str] = None):
     tag_str = ",".join(tags or [])
@@ -43,7 +70,7 @@ def delete_item(item_id: int):
         cursor = conn.cursor()
         cursor.execute("DELETE FROM items WHERE id = ?", (item_id))
         conn.commit()
-
+        
 def list_items(only_available: bool = False):
     with get_connection() as conn:
         cursor = conn.cursor()

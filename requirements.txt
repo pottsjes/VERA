@@ -1,5 +1,6 @@
-torch
-torchvision
+flask
+flask-wtf
+
 transformers
 jupyter
 beautifulsoup4
