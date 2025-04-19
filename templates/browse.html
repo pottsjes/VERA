@@ -4,6 +4,24 @@
 
 {% block content %}
 <h1 class="mb-4">Your Wardrobe</h1>
+
+<!-- Filter Form -->
+<form method="GET" action="{{ url_for('browse') }}" class="mb-4" id="filter-form">
+  <div class="row">
+    <div class="col-md-4">
+      <select name="filter_type" class="form-select">
+        <option value="">All Types</option>
+        {% for item_type in ITEM_TYPE %}
+          <option value="{{ item_type.value }}" {% if filter_type == item_type.value %}selected{% endif %}>
+            {{ item_type.name.capitalize() }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+</form>
+
+<!-- Items Grid -->
 <div class="row">
   {% for item in items %}
     <div class="col-md-4 mb-4">
@@ -11,10 +29,35 @@
         <img src="{{ item.image_path }}" class="card-img-top" style="object-fit: cover; height: 250px;">
         <div class="card-body">
           <h5 class="card-title">{{ item.name }}</h5>
-          <p class="card-text text-muted">{{ item.type }}</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <p class="card-text text-muted mb-0">{{ item.item_type }}</p>
+            <a href="{{ url_for('edit_item', item_id=item.item_id) }}" class="btn btn-primary btn-sm">Edit</a>
+          </div>
         </div>
       </div>
     </div>
   {% endfor %}
 </div>
+
+<script>
+  const filterForm = document.getElementById('filter-form');
+  const filterSelect = filterForm.querySelector('select[name="filter_type"]');
+
+  // Add an event listener to the dropdown
+  filterSelect.addEventListener('change', function () {
+    // Show a loading message or spinner
+    const loadingMessage = document.createElement('div');
+    loadingMessage.className = 'loading';
+    loadingMessage.style.position = 'fixed';
+    loadingMessage.style.top = '50%';
+    loadingMessage.style.left = '50%';
+    loadingMessage.style.transform = 'translate(-50%, -50%)';
+    loadingMessage.style.fontSize = '20px';
+    loadingMessage.style.color = '#555';
+    loadingMessage.style.background = '#fff';
+    loadingMessage.textContent = 'Loading...';
+    document.body.appendChild(loadingMessage);
+    filterForm.submit()
+  });
+</script>
 {% endblock %}

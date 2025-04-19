@@ -1,25 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Upload - V.E.R.A.{% endblock %}
+{% block title %}{{ "Edit Item" if edit_mode else "Upload - V.E.R.A." }}{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Upload New Wardrobe Item</h1>
+<h1 class="mb-4">{{ "Edit Wardrobe Item" if edit_mode else "Upload New Wardrobe Item" }}</h1>
 <form method="POST" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
+  {% for field in form %}
+    {% if field.type != "SubmitField" and field.type != "CSRFTokenField" %}
+      <div class="mb-3">
+        {{ field.label(class="form-label") }}
+        {{ field(class="form-control") }}
+        {% if field.errors %}
+          <div class="text-danger">
+            {% for error in field.errors %}
+              <small>{{ error }}</small>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% endfor %}
   <div class="mb-3">
-    {{ form.name.label(class="form-label") }}
-    {{ form.name(class="form-control") }}
-  </div>
-  <div class="mb-3">
-    {{ form.item_type.label(class="form-label") }}
-    {{ form.item_type(class="form-select") }}
-  </div>
-  <div class="mb-3">
-    {{ form.image.label(class="form-label") }}
-    {{ form.image(class="form-control") }}
-  </div>
-  <div class="mb-3">
-    {{ form.submit(class="btn btn-success") }}
+    {{ form.submit(class="btn btn-success", value="Save" if edit_mode else "Add Item") }}
   </div>
 </form>
 {% endblock %}

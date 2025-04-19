@@ -30,7 +30,7 @@ def init_db():
 
 def map_item(row):
     return Item(
-        id=row[0],
+        item_id=row[0],
         name=row[1],
         item_type=row[2],
         description=row[3],
@@ -54,7 +54,7 @@ def add_item(item: Item):
         nfc_tag_id=item.nfc_tag_id
     )
 
-def add_item(name: str, item_type: ITEM_TYPE, description: str = "", tags: Optional[List[str]] = None,
+def add_item(name: str, item_type: str, description: str = "", tags: Optional[List[str]] = None,
              image_path: str = "", nfc_tag_id: Optional[str] = None):
     tag_str = ",".join(tags or [])
     with get_connection() as conn:
@@ -62,7 +62,26 @@ def add_item(name: str, item_type: ITEM_TYPE, description: str = "", tags: Optio
         cursor.execute("""
             INSERT INTO items (name, item_type, description, tags, image_path, available, last_used, nfc_tag_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (name, item_type.value, description, tag_str, image_path, True, None, nfc_tag_id))
+        """, (name, item_type, description, tag_str, image_path, True, None, nfc_tag_id))
+        conn.commit()
+
+def get_item(item_id: str):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM items WHERE id = ?", (item_id))
+        result = cursor.fetchall()
+        return map_item(result[0])
+
+def update_item(item_id: int, name: str, item_type: str, description: str = "", tags: str = "",
+                image_path: str = "", nfc_tag_id: Optional[str] = None):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        print(name, item_type, description, tags, image_path, nfc_tag_id)
+        cursor.execute("""
+            UPDATE items
+            SET name = ?, item_type = ?, description = ?, tags = ?, image_path = ?, nfc_tag_id = ?
+            WHERE id = ?
+        """, (name, item_type, description, tags, image_path, nfc_tag_id, item_id))
         conn.commit()
 
 def delete_item(item_id: int):
@@ -78,7 +97,8 @@ def list_items(only_available: bool = False):
             cursor.execute("SELECT * FROM items WHERE available = 1")
         else:
             cursor.execute("SELECT * FROM items")
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+    return map_items(rows)
 
 def toggle_item_availability(item_id: int):
     with get_connection() as conn:
@@ -109,13 +129,22 @@ def find_by_tag(tag: str):
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM items WHERE tags LIKE ?", (f"%{tag}%",))
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+    return map_items(rows)
 
 def find_by_nfc(nfc_tag_id: str):
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM items WHERE nfc_tag_id = ?", (nfc_tag_id))
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+    return map_items(rows)
+
+def get_items_by_type(item_type: str):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM items WHERE item_type = ?", (item_type,))
+        rows = cursor.fetchall()
+    return map_items(rows)  # Use your existing `map_items` function
 
 if __name__ == "__main__":
     init_db()
