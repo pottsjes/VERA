@@ -1,6 +1,6 @@
 # main.py
 import db.db_client as db
-from flask import Flask, render_template, redirect, request, send_from_directory, url_for
+from flask import Flask, render_template, redirect, request, send_from_directory, url_for, jsonify
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, SelectField
@@ -8,10 +8,12 @@ from wtforms.validators import DataRequired
 from werkzeug.utils import secure_filename
 import os
 from models.constants import ITEM_TYPE
+import sqlite3
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vera-secret-key'  # Replace for prod
 app.config['UPLOAD_FOLDER'] = 'wardrobe'
+DB_NAME = 'wardrobe.db'
 
 # WTForms Form
 class UploadForm(FlaskForm):
@@ -21,6 +23,17 @@ class UploadForm(FlaskForm):
     tags = StringField("Tags (comma-separated)")
     image = FileField("Image", validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
     nfc_tag_id = StringField("NFC Tag ID")
+    fit = StringField("Fit")
+    aesthetic = StringField("Aesthetic")
+    tone = StringField("Tone")
+    layer = StringField("Layer")
+    season = StringField("Season")
+    color = StringField("Color")
+    pattern_style = StringField("Pattern Style")
+    material = StringField("Material")
+    gender_expression = StringField("Gender Expression")
+    formality = StringField("Formality")
+    use_case = StringField("Use Case")
     submit = SubmitField("Add Item")
 
     def __init__(self, *args, **kwargs):
@@ -35,61 +48,93 @@ class UploadForm(FlaskForm):
             self.description.data = obj.description
             self.tags.data = ",".join(obj.tags) if obj.tags else ""
             self.nfc_tag_id.data = obj.nfc_tag_id
+            self.fit.data = obj.fit
+            self.aesthetic.data = obj.aesthetic
+            self.tone.data = obj.tone
+            self.layer.data = obj.layer
+            self.season.data = obj.season
+            self.color.data = obj.color
+            self.pattern_style.data = obj.pattern_style
+            self.material.data = obj.material
+            self.gender_expression.data = obj.gender_expression
+            self.formality.data = obj.formality
+            self.use_case.data = obj.use_case
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     form = UploadForm()
     if form.validate_on_submit():
+        # Clean up the tags input
+        tags = ",".join(tag.strip() for tag in form.tags.data.split(",") if tag.strip())
+
         filename = secure_filename(form.image.data.filename)
-        # Where to save the file (on disk)
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         form.image.data.save(save_path)
-        # Where to serve the file (in the browser)
         image_url = url_for('wardrobe_file', filename=filename)
 
         db.add_item(
             name=form.name.data,
             item_type=form.item_type.data,
             description=form.description.data,
-            tags=form.tags.data,
+            tags=tags,
             image_path=image_url,
-            nfc_tag_id=form.nfc_tag_id.data
+            nfc_tag_id=form.nfc_tag_id.data,
+            fit=form.fit.data,
+            aesthetic=form.aesthetic.data,
+            tone=form.tone.data,
+            layer=form.layer.data,
+            season=form.season.data,
+            color=form.color.data,
+            pattern_style=form.pattern_style.data,
+            material=form.material.data,
+            gender_expression=form.gender_expression.data,
+            formality=form.formality.data,
+            use_case=form.use_case.data
         )
         return redirect(url_for("browse"))
     return render_template("upload.html", form=form)
 
 @app.route("/edit/<string:item_id>", methods=["GET", "POST"])
 def edit_item(item_id):
-    item = db.get_item(item_id)  # Fetch the item from the database
+    item = db.get_item(item_id)
     if not item:
-        return redirect(url_for("browse"))  # Redirect if the item doesn't exist
+        return redirect(url_for("browse"))
 
     if request.method == "POST":
-        # Instantiate the form without the `obj` to process the submitted data
         form = UploadForm()
         if form.validate_on_submit():
-            # Handle the image upload
+            tags = ",".join(tag.strip() for tag in form.tags.data.split(",") if tag.strip())
+
             if form.image.data:
                 filename = secure_filename(form.image.data.filename)
                 save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 form.image.data.save(save_path)
                 image_url = url_for('wardrobe_file', filename=filename)
             else:
-                image_url = item.image_path  # Keep the existing image path if no new image is uploaded
+                image_url = item.image_path
 
-            # Update the item in the database
             db.update_item(
                 item_id=item_id,
-                name=form.name.data,  # Get the updated name from the form
-                item_type=form.item_type.data,  # Get the updated item type from the form
-                description=form.description.data,  # Get the updated description from the form
-                tags=form.tags.data,  # Get the updated tags from the form
-                image_path=image_url,  # Use the updated or existing image path
-                nfc_tag_id=form.nfc_tag_id.data  # Get the updated NFC tag ID from the form
+                name=form.name.data,
+                item_type=form.item_type.data,
+                description=form.description.data,
+                tags=tags,  # Save cleaned tags
+                image_path=image_url,
+                nfc_tag_id=form.nfc_tag_id.data,
+                fit=form.fit.data,
+                aesthetic=form.aesthetic.data,
+                tone=form.tone.data,
+                layer=form.layer.data,
+                season=form.season.data,
+                color=form.color.data,
+                pattern_style=form.pattern_style.data,
+                material=form.material.data,
+                gender_expression=form.gender_expression.data,
+                formality=form.formality.data,
+                use_case=form.use_case.data
             )
             return redirect(url_for("browse"))
     else:
-        # Instantiate the form with the `obj` to prepopulate the fields on a GET request
         form = UploadForm(obj=item)
 
     return render_template("upload.html", form=form, edit_mode=True)
@@ -108,6 +153,33 @@ def browse():
 @app.route('/wardrobe/<filename>')
 def wardrobe_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route("/database", methods=["GET", "POST"])
+def database():
+    if request.method == "POST":
+        data = request.get_json()
+        query = data.get("query")
+        results = {"columns": [], "rows": []}
+        error = None
+
+        try:
+            with sqlite3.connect(DB_NAME) as conn:
+                cursor = conn.cursor()
+                cursor.execute(query)
+                if query.strip().lower().startswith("select"):
+                    results["columns"] = [desc[0] for desc in cursor.description]
+                    results["rows"] = cursor.fetchall()
+                else:
+                    conn.commit()
+        except sqlite3.Error as e:
+            error = str(e)
+
+        if error:
+            return jsonify({"error": error}), 400
+        return jsonify(results)
+
+    # For GET requests, render the query editor
+    return render_template("database.html")
 
 if __name__ == "__main__":
     db.init_db()

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Database - V.E.R.A.{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Database Query Editor</h1>
+
+<!-- Query Editor -->
+<form id="query-form">
+  <textarea id="query-editor" name="query"></textarea>
+  <button type="button" id="run-query" class="btn btn-primary mt-3">Run Query</button>
+</form>
+
+<!-- Query Results -->
+<div id="query-results" class="mt-4">
+  <!-- Results will be dynamically inserted here -->
+</div>
+
+<!-- Include CodeMirror -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/sql/sql.min.js"></script>
+
+<script>
+  // Initialize CodeMirror
+  const editor = CodeMirror.fromTextArea(document.getElementById('query-editor'), {
+    mode: 'text/x-sql',
+    lineNumbers: true,
+    theme: 'default',
+    autofocus: true
+  });
+
+  // Handle form submission via AJAX
+  document.getElementById('run-query').addEventListener('click', async function () {
+    const query = editor.getValue(); // Get the query from CodeMirror
+    const queryResults = document.getElementById('query-results');
+
+    // Clear previous results
+    queryResults.innerHTML = '<p>Loading...</p>';
+
+    try {
+      // Send the query to the server via AJAX
+      const response = await fetch('/database', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query })
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        // Display error message
+        queryResults.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+      } else {
+        // Display query results
+        let html = '<h3>Results:</h3><table class="table table-bordered"><thead><tr>';
+        data.columns.forEach(column => {
+          html += `<th>${column}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+        data.rows.forEach(row => {
+          html += '<tr>';
+          row.forEach(cell => {
+            html += `<td>${cell}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        queryResults.innerHTML = html;
+      }
+    } catch (error) {
+      queryResults.innerHTML = `<div class="alert alert-danger">An error occurred: ${error.message}</div>`;
+    }
+  });
+</script>
+{% endblock %}

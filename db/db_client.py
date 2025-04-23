@@ -23,7 +23,18 @@ def init_db():
             image_path TEXT,
             available BOOLEAN DEFAULT 1,
             last_used TEXT,
-            nfc_tag_id TEXT
+            nfc_tag_id TEXT,
+            fit TEXT,
+            aesthetic TEXT,
+            tone TEXT,
+            layer TEXT,
+            season TEXT,
+            color TEXT,
+            pattern_style TEXT,
+            material TEXT,
+            gender_expression TEXT,
+            formality TEXT,
+            use_case TEXT
         )
         """)
         conn.commit()
@@ -38,7 +49,18 @@ def map_item(row):
         image_path=row[5],
         available=bool(row[6]),
         last_used=row[7],
-        nfc_tag_id=row[8]
+        nfc_tag_id=row[8],
+        fit=row[9],
+        aesthetic=row[10],
+        tone=row[11],
+        layer=row[12],
+        season=row[13],
+        color=row[14],
+        pattern_style=row[15],
+        material=row[16],
+        gender_expression=row[17],
+        formality=row[18],
+        use_case=row[19]
     )
 
 def map_items(rows):
@@ -51,18 +73,34 @@ def add_item(item: Item):
         description=item.descriptionription,
         tags=",".join(item.tags or []),
         image_path=item.image_path,
-        nfc_tag_id=item.nfc_tag_id
+        nfc_tag_id=item.nfc_tag_id,
+        fit=item.fit,
+        aesthetic=item.aesthetic,
+        tone=item.tone,
+        layer=item.layer,
+        season=item.season,
+        color=item.color,
+        pattern_style=item.pattern_style,
+        material=item.material,
+        gender_expression=item.gender_expression,
+        formality=item.formality,
+        use_case=item.use_case
     )
 
 def add_item(name: str, item_type: str, description: str = "", tags: Optional[List[str]] = None,
-             image_path: str = "", nfc_tag_id: Optional[str] = None):
+             image_path: str = "", nfc_tag_id: Optional[str] = None, fit: str = "", aesthetic: str = "",
+             tone: str = "", layer: str = "", season: str = "", color: str = "", pattern_style: str = "",
+             material: str = "", gender_expression: str = "", formality: str = "", use_case: str = ""):
     tag_str = ",".join(tags or [])
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO items (name, item_type, description, tags, image_path, available, last_used, nfc_tag_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (name, item_type, description, tag_str, image_path, True, None, nfc_tag_id))
+            INSERT INTO items (name, item_type, description, tags, image_path, available, last_used, nfc_tag_id,
+                               fit, aesthetic, tone, layer, season, color, pattern_style, material,
+                               gender_expression, formality, use_case)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (name, item_type, description, tag_str, image_path, True, None, nfc_tag_id, fit, aesthetic, tone,
+              layer, season, color, pattern_style, material, gender_expression, formality, use_case))
         conn.commit()
 
 def get_item(item_id: str):
@@ -73,15 +111,19 @@ def get_item(item_id: str):
         return map_item(result[0])
 
 def update_item(item_id: int, name: str, item_type: str, description: str = "", tags: str = "",
-                image_path: str = "", nfc_tag_id: Optional[str] = None):
+                image_path: str = "", nfc_tag_id: Optional[str] = None, fit: str = "", aesthetic: str = "",
+                tone: str = "", layer: str = "", season: str = "", color: str = "", pattern_style: str = "",
+                material: str = "", gender_expression: str = "", formality: str = "", use_case: str = ""):
     with get_connection() as conn:
         cursor = conn.cursor()
-        print(name, item_type, description, tags, image_path, nfc_tag_id)
         cursor.execute("""
             UPDATE items
-            SET name = ?, item_type = ?, description = ?, tags = ?, image_path = ?, nfc_tag_id = ?
+            SET name = ?, item_type = ?, description = ?, tags = ?, image_path = ?, nfc_tag_id = ?,
+                fit = ?, aesthetic = ?, tone = ?, layer = ?, season = ?, color = ?, pattern_style = ?,
+                material = ?, gender_expression = ?, formality = ?, use_case = ?
             WHERE id = ?
-        """, (name, item_type, description, tags, image_path, nfc_tag_id, item_id))
+        """, (name, item_type, description, tags, image_path, nfc_tag_id, fit, aesthetic, tone, layer, season,
+              color, pattern_style, material, gender_expression, formality, use_case, item_id))
         conn.commit()
 
 def delete_item(item_id: int):
