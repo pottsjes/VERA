@@ -4,25 +4,84 @@
 
 {% block content %}
 <h1 class="mb-4">{{ "Edit Wardrobe Item" if edit_mode else "Upload New Wardrobe Item" }}</h1>
+
 <form method="POST" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  {% for field in form %}
-    {% if field.type != "SubmitField" and field.type != "CSRFTokenField" %}
-      <div class="mb-3">
-        {{ field.label(class="form-label") }}
-        {{ field(class="form-control") }}
-        {% if field.errors %}
-          <div class="text-danger">
-            {% for error in field.errors %}
-              <small>{{ error }}</small>
-            {% endfor %}
-          </div>
-        {% endif %}
+
+  <!-- Image Upload Field -->
+  <div class="mb-3">
+    {{ form.image.label(class="form-label") }}
+    {{ form.image(class="form-control", id="image-input") }}
+    {% if form.image.errors %}
+      <div class="text-danger">
+        {% for error in form.image.errors %}
+          <small>{{ error }}</small>
+        {% endfor %}
       </div>
     {% endif %}
-  {% endfor %}
+  </div>
+
+  <!-- Additional Fields (Initially Hidden) -->
+  <div id="additional-fields" style="display: {{ 'block' if edit_mode else 'none' }};">
+    {% for field in form %}
+      {% if field.name != "image" and field.type != "SubmitField" and field.type != "CSRFTokenField" %}
+        <div class="mb-3">
+          {{ field.label(class="form-label") }}
+          {{ field(class="form-control") }}
+          {% if field.errors %}
+            <div class="text-danger">
+              {% for error in field.errors %}
+                <small>{{ error }}</small>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Submit Button -->
   <div class="mb-3">
     {{ form.submit(class="btn btn-success", value="Save" if edit_mode else "Add Item") }}
   </div>
 </form>
+
+<script>
+  document.getElementById('image-input').addEventListener('change', async function () {
+    const additionalFields = document.getElementById('additional-fields');
+    const file = this.files[0];
+
+    if (file) {
+      additionalFields.style.display = 'block'; // Show additional fields
+
+      // Create a FormData object to send the image to the server
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Send the image to the server for analysis
+      try {
+        const response = await fetch('/analyze_image', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Populate the form fields with the AI's predictions
+          for (const [fieldName, value] of Object.entries(data)) {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+              field.value = value;
+            }
+          }
+        } else {
+          console.error('Failed to analyze image:', await response.text());
+        }
+      } catch (error) {
+        console.error('Error analyzing image:', error);
+      }
+    }
+  });
+</script>
 {% endblock %}

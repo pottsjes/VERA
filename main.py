@@ -92,7 +92,7 @@ def upload():
             use_case=form.use_case.data
         )
         return redirect(url_for("browse"))
-    return render_template("upload.html", form=form)
+    return render_template("upload.html", form=form, edit_item=False)
 
 @app.route("/edit/<string:item_id>", methods=["GET", "POST"])
 def edit_item(item_id):
@@ -180,6 +180,41 @@ def database():
 
     # For GET requests, render the query editor
     return render_template("database.html")
+
+@app.route('/analyze_image', methods=['POST'])
+def analyze_image():
+    file = request.files.get('image')
+    if not file:
+        return jsonify({'error': 'No image provided'}), 400
+
+    # Load the image (e.g., using PIL or OpenCV)
+    from PIL import Image
+    image = Image.open(file.stream)
+
+    # Analyze the image using your AI model (replace with actual logic)
+    analysis_results = analyze_image_with_ai(image)
+
+    return jsonify(analysis_results)
+
+def analyze_image_with_ai(image):
+    # Example: Dummy analysis logic (replace with your AI model's predictions)
+    return {
+        'name': 'Predicted Name',
+        'item_type': 'Predicted Type',
+        'description': 'Predicted Description',
+        'tags': 'tag1, tag2, tag3',
+        'fit': 'Predicted Fit',
+        'aesthetic': 'Predicted Aesthetic',
+        'tone': 'Predicted Tone',
+        'layer': 'Predicted Layer',
+        'season': 'Predicted Season',
+        'color': 'Predicted Color',
+        'pattern_style': 'Predicted Pattern Style',
+        'material': 'Predicted Material',
+        'gender_expression': 'Predicted Gender Expression',
+        'formality': 'Predicted Formality',
+        'use_case': 'Predicted Use Case'
+    }
 
 if __name__ == "__main__":
     db.init_db()
