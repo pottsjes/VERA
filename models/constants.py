@@ -15,6 +15,8 @@ WASHABLE_ITEM_TYPES = [
     ITEM_TYPE.TOP
 ]
 
+WARDROBE_FOLDER = 'wardrobe'
+DB_NAME = 'wardrobe.db'
 DATABASE_COLUMNS = [
     "id",
     "name",
