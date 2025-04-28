@@ -1,5 +1,6 @@
 # main.py
 import base64
+import datetime
 import io
 import json
 import re
@@ -236,6 +237,7 @@ def analyze_image_with_ai(image):
 
 def prompt_ai(prompt_content, retry_count):
     if retry_count > MAX_AI_TRIES:
+        save_failed_output(prompt_content)
         raise Exception("Max retries exceeded for AI response processing.")
 
     client = OpenAI(api_key=OPEN_AI_KEY)
@@ -295,6 +297,74 @@ def extract_json_from_text(text_output):
         raise ValueError(f"Missing required fields: {missing_fields}")
 
     return data
+
+def save_failed_output(prompt_content):
+    """Save failed AI prompt content to disk for manual inspection."""
+    failed_dir = "failed_ai_responses"
+    os.makedirs(failed_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = os.path.join(failed_dir, f"failed_response_{timestamp}.txt")
+
+    # Flatten prompt_content nicely
+    if isinstance(prompt_content, list):
+        content_text = "\n\n".join(
+            f"{block.get('type', block.get('role'))}: {block.get('text', block.get('content', ''))}"
+            for block in prompt_content
+        )
+    else:
+        content_text = str(prompt_content)
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content_text)
+
+    print(f"📝 Saved failed AI response to {filename}")
+
+@app.route("/logs", methods=["GET", "POST"])
+def logs():
+    logs_dir = "failed_ai_responses"
+    os.makedirs(logs_dir, exist_ok=True)  # Ensure the directory exists
+
+    # Handle deletion of a log file
+    if request.method == "POST":
+        action = request.form.get("action")
+        filename = request.form.get("filename")
+        if action == "delete" and filename:
+            file_path = os.path.join(logs_dir, filename)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                return jsonify({"success": True, "message": f"Deleted {filename}"}), 200
+            else:
+                return jsonify({"success": False, "message": "File not found"}), 404
+
+    # Get all log files
+    log_files = [
+        {"name": f, "timestamp": os.path.getmtime(os.path.join(logs_dir, f))}
+        for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))
+    ]
+
+    # Sort logs by timestamp (newest first)
+    log_files.sort(key=lambda x: x["timestamp"], reverse=True)
+
+    # Handle filtering/sorting (optional)
+    filter_query = request.args.get("filter", "").lower()
+    if filter_query:
+        log_files = [log for log in log_files if filter_query in log["name"].lower()]
+
+    return render_template("logs.html", logs=log_files)
+
+@app.route("/logs/<filename>")
+def view_log(filename):
+    logs_dir = "failed_ai_responses"
+    file_path = os.path.join(logs_dir, filename)
+
+    if not os.path.exists(file_path):
+        return "Log file not found", 404
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    return render_template("view_log.html", filename=filename, content=content)
 
 if __name__ == "__main__":
     db.init_db()

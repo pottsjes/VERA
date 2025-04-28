@@ -1,0 +1,10 @@
+TYPE: input_text
+CONTENT: You are a fashion assistant. Analyze the uploaded clothing item and fill out the structured wardrobe database fields. Respond only with a JSON object.
+
+TYPE: input_image
+CONTENT: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD...
+
+---
+⚠️ ERROR: JSONDecodeError
+Details: Expecting property name enclosed in double quotes: line 3 column 5 (char 45)
+---
