@@ -46,13 +46,24 @@
   </div>
 </form>
 
+<!-- Add a loading indicator -->
+<div id="loading-indicator" style="display: none; text-align: center; margin-top: 20px;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p>Analyzing image, please wait...</p>
+</div>
+
 <script>
   document.getElementById('image-input').addEventListener('change', async function () {
     const additionalFields = document.getElementById('additional-fields');
+    const loadingIndicator = document.getElementById('loading-indicator');
     const file = this.files[0];
 
     if (file) {
-      additionalFields.style.display = 'block'; // Show additional fields
+      // Hide additional fields and show the loading indicator
+      additionalFields.style.display = 'none';
+      loadingIndicator.style.display = 'block';
 
       // Create a FormData object to send the image to the server
       const formData = new FormData();
@@ -75,11 +86,19 @@
               field.value = value;
             }
           }
+
+          // Show the additional fields after populating them
+          additionalFields.style.display = 'block';
         } else {
           console.error('Failed to analyze image:', await response.text());
+          alert('Failed to analyze the image. Please try again.');
         }
       } catch (error) {
         console.error('Error analyzing image:', error);
+        alert('An error occurred while analyzing the image. Please try again.');
+      } finally {
+        // Hide the loading indicator
+        loadingIndicator.style.display = 'none';
       }
     }
   });

@@ -1,7 +1,10 @@
 flask
 flask-wtf
-
+numpy<2.0
+torch
 transformers
+openai
+
 jupyter
 beautifulsoup4
 selenium

@@ -1,14 +1,36 @@
 # main.py
+import base64
+import io
+import json
+import re
+from openai import OpenAI
 import db.db_client as db
-from flask import Flask, render_template, redirect, request, send_from_directory, url_for, jsonify
+from flask import (
+    Flask,
+    render_template,
+    redirect,
+    request,
+    send_from_directory,
+    url_for,
+    jsonify
+)
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired
 from werkzeug.utils import secure_filename
 import os
-from models.constants import ITEM_TYPE
+from models.constants import (
+    ITEM_TYPE,
+    API_REQUIRED_COLUMNS,
+    OPEN_AI_KEY,
+    IMAGE_CLASSIFICATION_PROMPT,
+    REFORMAT_JSON_PROMPT,
+    MISSING_FIELDS_PROMPT,
+    MAX_AI_TRIES,
+)
 import sqlite3
+from PIL import Image
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vera-secret-key'  # Replace for prod
@@ -60,6 +82,21 @@ class UploadForm(FlaskForm):
             self.formality.data = obj.formality
             self.use_case.data = obj.use_case
 
+def compress_image(input_image, size=(512, 512), quality=70):
+    image = Image.open(input_image)
+    image = image.resize(size)
+    output = io.BytesIO()
+    image.save(output, format="JPEG", quality=quality)
+    output.seek(0)
+    return Image.open(output)
+
+def save_image(image, compress=False):
+    filename = secure_filename(image.filename)
+    save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    image = compress_image(image) if compress else image
+    image.save(save_path, format="JPEG")
+    return url_for('wardrobe_file', filename=filename)
+
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     form = UploadForm()
@@ -67,10 +104,7 @@ def upload():
         # Clean up the tags input
         tags = ",".join(tag.strip() for tag in form.tags.data.split(",") if tag.strip())
 
-        filename = secure_filename(form.image.data.filename)
-        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        form.image.data.save(save_path)
-        image_url = url_for('wardrobe_file', filename=filename)
+        image_url = save_image(form.image.data)
 
         db.add_item(
             name=form.name.data,
@@ -106,10 +140,7 @@ def edit_item(item_id):
             tags = ",".join(tag.strip() for tag in form.tags.data.split(",") if tag.strip())
 
             if form.image.data:
-                filename = secure_filename(form.image.data.filename)
-                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                form.image.data.save(save_path)
-                image_url = url_for('wardrobe_file', filename=filename)
+                image_url = save_image(form.image.data)
             else:
                 image_url = item.image_path
 
@@ -118,7 +149,7 @@ def edit_item(item_id):
                 name=form.name.data,
                 item_type=form.item_type.data,
                 description=form.description.data,
-                tags=tags,  # Save cleaned tags
+                tags=tags,
                 image_path=image_url,
                 nfc_tag_id=form.nfc_tag_id.data,
                 fit=form.fit.data,
@@ -186,35 +217,84 @@ def analyze_image():
     file = request.files.get('image')
     if not file:
         return jsonify({'error': 'No image provided'}), 400
-
-    # Load the image (e.g., using PIL or OpenCV)
-    from PIL import Image
-    image = Image.open(file.stream)
-
-    # Analyze the image using your AI model (replace with actual logic)
-    analysis_results = analyze_image_with_ai(image)
-
+    analysis_results = analyze_image_with_ai(file)
     return jsonify(analysis_results)
 
 def analyze_image_with_ai(image):
-    # Example: Dummy analysis logic (replace with your AI model's predictions)
-    return {
-        'name': 'Predicted Name',
-        'item_type': 'Predicted Type',
-        'description': 'Predicted Description',
-        'tags': 'tag1, tag2, tag3',
-        'fit': 'Predicted Fit',
-        'aesthetic': 'Predicted Aesthetic',
-        'tone': 'Predicted Tone',
-        'layer': 'Predicted Layer',
-        'season': 'Predicted Season',
-        'color': 'Predicted Color',
-        'pattern_style': 'Predicted Pattern Style',
-        'material': 'Predicted Material',
-        'gender_expression': 'Predicted Gender Expression',
-        'formality': 'Predicted Formality',
-        'use_case': 'Predicted Use Case'
-    }
+    compressed_image = compress_image(image)
+    output = io.BytesIO()
+    compressed_image.save(output, format="JPEG")
+    output.seek(0)
+    b64_image = base64.b64encode(output.getvalue()).decode("utf-8")
+
+    initial_prompt = [
+        {"type": "input_text", "text": IMAGE_CLASSIFICATION_PROMPT},
+        {"type": "input_image", "image_url": f"data:image/jpeg;base64,{b64_image}"},
+    ]
+
+    return prompt_ai(initial_prompt, retry_count=1)
+
+def prompt_ai(prompt_content, retry_count):
+    if retry_count > MAX_AI_TRIES:
+        raise Exception("Max retries exceeded for AI response processing.")
+
+    client = OpenAI(api_key=OPEN_AI_KEY)
+
+    # Determine if this is initial image call or a text reformat call
+    if retry_count == 1:  # initial classification request
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            instructions="",
+            input=[{"role": "user", "content": prompt_content}]
+        )
+        text_output = response.output_text
+    else:  # fallback reformat request
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=prompt_content,
+            temperature=0.2,
+        )
+        text_output = response.choices[0].message.content
+
+    try:
+        data = extract_json_from_text(text_output)
+    except json.JSONDecodeError as e:
+        print(f"⚠️ JSON decoding error: {e}")
+        print(f"🔄 Attempting reformat due to invalid JSON structure (retry {retry_count + 1})...")
+        reformat_prompt = [
+            {"role": "system", "content": REFORMAT_JSON_PROMPT},
+            {"role": "user", "content": text_output}
+        ]
+        return prompt_ai(reformat_prompt, retry_count + 1)
+    except ValueError as e:
+        print(f"⚠️ Missing required fields error: {e}")
+        print(f"🔄 Attempting reformat due to incomplete fields (retry {retry_count + 1})...")
+        reformat_prompt = [
+            {"role": "system", "content": MISSING_FIELDS_PROMPT},
+            {"role": "user", "content": f"Fields required: {API_REQUIRED_COLUMNS}\n\n{text_output}"}
+        ]
+        return prompt_ai(reformat_prompt, retry_count + 1)
+
+    return data
+
+def extract_json_from_text(text_output):
+    text_output = text_output.strip()
+    try:
+        data = json.loads(text_output)
+    except json.JSONDecodeError as e:
+        if "```json" in text_output:
+            match = re.search(r'```json(.*?)```', text_output, re.DOTALL)
+            if match:
+                text_output = match.group(1).strip()
+                data = json.loads(text_output)
+        else:
+            raise
+    
+    missing_fields = [field for field in API_REQUIRED_COLUMNS if field not in data]
+    if missing_fields:
+        raise ValueError(f"Missing required fields: {missing_fields}")
+
+    return data
 
 if __name__ == "__main__":
     db.init_db()
