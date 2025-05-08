@@ -3,6 +3,7 @@ from flask import (
     jsonify,
     request,
 )
+from app.utils.ai_utils import analyze_image_with_ai
 
 bp = Blueprint('analyze_image', __name__, url_prefix='/analyze_image')
 

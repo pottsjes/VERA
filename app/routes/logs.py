@@ -5,7 +5,8 @@ from flask import (
     render_template,
     request,
 )
-from models.constants import WARDROBE_FOLDER
+from datetime import datetime
+from models.constants import DATETIME_FORMAT
 
 bp = Blueprint('logs', __name__, url_prefix='/logs')
 
@@ -27,18 +28,23 @@ def logs():
                 return jsonify({"success": False, "message": "File not found"}), 404
 
     # Get all log files
-    log_files = [
-        {"name": f, "timestamp": os.path.getmtime(os.path.join(logs_dir, f))}
-        for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))
-    ]
+    log_files = []
+    for f in os.listdir(logs_dir):
+        if os.path.isfile(os.path.join(logs_dir, f)):
+            # Extract datetime from the file name
+            try:
+                timestamp_str = f.split("_")[-1].split(".")[0]  # Extract the datetime part
+                timestamp = datetime.strptime(timestamp_str, DATETIME_FORMAT)  # Parse it
+            except (IndexError, ValueError):
+                timestamp = None  # Handle files without a valid datetime
+
+            log_files.append({
+                "name": f,
+                "timestamp": timestamp,
+            })
 
     # Sort logs by timestamp (newest first)
-    log_files.sort(key=lambda x: x["timestamp"], reverse=True)
-
-    # Handle filtering/sorting (optional)
-    filter_query = request.args.get("filter", "").lower()
-    if filter_query:
-        log_files = [log for log in log_files if filter_query in log["name"].lower()]
+    log_files.sort(key=lambda x: x["timestamp"] or datetime.min, reverse=True)
 
     return render_template("logs.html", logs=log_files)
 

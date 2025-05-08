@@ -49,6 +49,8 @@ def edit_item(item_id):
             )
             return redirect(url_for("browse.browse"))
     else:
+        print(item.name)
         form = UploadForm(obj=item)
+        print(form.name.data)
 
     return render_template("upload.html", form=form, edit_mode=True)

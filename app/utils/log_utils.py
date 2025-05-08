@@ -1,13 +1,13 @@
-import datetime
+from datetime import datetime
 import os
-
+from models.constants import DATETIME_FORMAT
 
 def save_failed_output(prompt_content):
     """Save failed AI prompt content to disk for manual inspection."""
     failed_dir = "failed_ai_responses"
     os.makedirs(failed_dir, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime(DATETIME_FORMAT)
     filename = os.path.join(failed_dir, f"failed_response_{timestamp}.txt")
 
     # Flatten prompt_content nicely
@@ -21,5 +21,3 @@ def save_failed_output(prompt_content):
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(content_text)
-
-    print(f"📝 Saved failed AI response to {filename}")

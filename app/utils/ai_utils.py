@@ -25,7 +25,7 @@ def analyze_image_with_ai(image):
 def prompt_ai(prompt_content, retry_count):
     if retry_count > MAX_AI_TRIES:
         save_failed_output(prompt_content)
-        raise Exception("Max retries exceeded for AI response processing.")
+        return {"error": "Max retries exceeded for AI response processing."}
 
     client = OpenAI(api_key=OPEN_AI_KEY)
 

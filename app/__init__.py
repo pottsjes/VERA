@@ -10,7 +10,7 @@ from app.routes import (
 )
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="../templates")
     app.config['SECRET_KEY'] = 'vera-secret-key'  # Replace for prod
 
     # Import and register blueprints

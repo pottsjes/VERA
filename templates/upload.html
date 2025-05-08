@@ -41,7 +41,7 @@
   </div>
 
   <!-- Submit Button -->
-  <div class="mb-3">
+  <div id="submit-button-container" style="display: {{ 'block' if edit_mode else 'none' }};">
     {{ form.submit(class="btn btn-success", value="Save" if edit_mode else "Add Item") }}
   </div>
 </form>
@@ -58,11 +58,13 @@
   document.getElementById('image-input').addEventListener('change', async function () {
     const additionalFields = document.getElementById('additional-fields');
     const loadingIndicator = document.getElementById('loading-indicator');
+    const submitButtonContainer = document.getElementById('submit-button-container');
     const file = this.files[0];
 
     if (file) {
-      // Hide additional fields and show the loading indicator
+      // Hide additional fields and submit button, and show the loading indicator
       additionalFields.style.display = 'none';
+      submitButtonContainer.style.display = 'none';
       loadingIndicator.style.display = 'block';
 
       // Create a FormData object to send the image to the server
@@ -71,26 +73,28 @@
 
       // Send the image to the server for analysis
       try {
-        const response = await fetch('/analyze_image', {
+        const response = await fetch("{{ url_for('analyze_image.analyze_image') }}", {
           method: 'POST',
           body: formData
         });
+        console.log(response);
 
         if (response.ok) {
           const data = await response.json();
-
-          // Populate the form fields with the AI's predictions
-          for (const [fieldName, value] of Object.entries(data)) {
-            const field = document.querySelector(`[name="${fieldName}"]`);
-            if (field) {
-              field.value = value;
+          if (!data.error) {
+            // Populate the form fields with the AI's predictions
+            for (const [fieldName, value] of Object.entries(data)) {
+              const field = document.querySelector(`[name="${fieldName}"]`);
+              if (field) {
+                field.value = value;
+              }
             }
-          }
 
-          // Show the additional fields after populating them
-          additionalFields.style.display = 'block';
+            // Show the additional fields and submit button after populating them
+            additionalFields.style.display = 'block';
+            submitButtonContainer.style.display = 'block';
+          }
         } else {
-          console.error('Failed to analyze image:', await response.text());
           alert('Failed to analyze the image. Please try again.');
         }
       } catch (error) {

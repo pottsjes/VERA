@@ -8,17 +8,17 @@
 <body>
   <!-- Shared Header -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-    <a class="navbar-brand" href="{{ url_for('browse') }}">V.E.R.A.</a>
+    <a class="navbar-brand" href="{{ url_for('browse.browse') }}">V.E.R.A.</a>
     <ul class="navbar-nav ms-3">
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('database') }}">Database</a>
+        <a class="nav-link" href="{{ url_for('database.database') }}">Database</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('logs') }}">Logs</a>
+        <a class="nav-link" href="{{ url_for('logs.logs') }}">Logs</a>
       </li>
     </ul>
     <div class="ms-auto">
-      <a href="{{ url_for('upload') }}" class="btn btn-outline-light">Upload</a>
+      <a href="{{ url_for('upload.upload') }}" class="btn btn-outline-light">Upload</a>
     </div>
   </nav>
 
