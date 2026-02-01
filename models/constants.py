@@ -48,7 +48,7 @@ API_REQUIRED_COLUMNS = [
     "gender_expression", "formality", "use_case"
 ]
 
-OPEN_AI_KEY = "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"
+OPEN_AI_KEY = ""
 MAX_AI_TRIES = 3
 IMAGE_CLASSIFICATION_PROMPT = """You are a fashion wardrobe assistant.
 Analyze the provided clothing image and return a well-formatted JSON object for wardrobe database management.
