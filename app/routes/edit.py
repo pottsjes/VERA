@@ -7,7 +7,7 @@ from flask import (
 )
 from app.forms.upload_form import UploadForm
 from app.utils.image_utils import save_image
-from db.db_client import get_item, update_item
+from app.db.db_client import get_item, update_item
 
 bp = Blueprint('edit', __name__, url_prefix='/edit/<string:item_id>')
 
@@ -49,8 +49,9 @@ def edit_item(item_id):
             )
             return redirect(url_for("browse.browse"))
     else:
-        print(item.name)
+        # Tags are stored as a list on the item but the form uses a comma-separated string
+        if isinstance(item.tags, list):
+            item.tags = ", ".join(item.tags)
         form = UploadForm(obj=item)
-        print(form.name.data)
 
     return render_template("upload.html", form=form, edit_mode=True)

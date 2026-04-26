@@ -3,8 +3,8 @@ from flask import (
     render_template,
     request,
 )
-from db.db_client import get_items_by_type, list_items
-from models.constants import ITEM_TYPE
+from app.db.db_client import get_items_by_type, list_items
+from app.models.constants import ITEM_TYPE
 
 bp = Blueprint('browse', __name__)
 

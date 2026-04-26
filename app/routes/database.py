@@ -7,8 +7,7 @@ from flask import (
 )
 from app.forms.upload_form import UploadForm
 from app.utils.image_utils import save_image
-from db.db_client import get_item, update_item
-from models.constants import DB_NAME
+from app.db.db_client import DB_NAME, get_item, update_item
 
 bp = Blueprint('database', __name__, url_prefix='/database')
 

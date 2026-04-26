@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired
-from models.constants import ITEM_TYPE
+from app.models.constants import ITEM_TYPE
 
 class UploadForm(FlaskForm):
     name = StringField("Item Name", validators=[DataRequired()])
@@ -25,23 +25,7 @@ class UploadForm(FlaskForm):
     submit = SubmitField("Add Item")
 
     def __init__(self, *args, **kwargs):
-        obj = kwargs.pop('obj', None)
         super().__init__(*args, **kwargs)
-        self.item_type.choices = [(item_type.value, item_type.name.capitalize()) for item_type in ITEM_TYPE]
-        if obj:
-            self.name.data = obj.name
-            self.item_type.data = obj.item_type
-            self.description.data = obj.description
-            self.tags.data = ",".join(obj.tags) if obj.tags else ""
-            self.nfc_tag_id.data = obj.nfc_tag_id
-            self.fit.data = obj.fit
-            self.aesthetic.data = obj.aesthetic
-            self.tone.data = obj.tone
-            self.layer.data = obj.layer
-            self.season.data = obj.season
-            self.color.data = obj.color
-            self.pattern_style.data = obj.pattern_style
-            self.material.data = obj.material
-            self.gender_expression.data = obj.gender_expression
-            self.formality.data = obj.formality
-            self.use_case.data = obj.use_case
+        self.item_type.choices = [
+            (item_type.value, item_type.name.capitalize()) for item_type in ITEM_TYPE
+        ]

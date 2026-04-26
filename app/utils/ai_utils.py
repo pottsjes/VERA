@@ -4,7 +4,7 @@ import json
 import re
 from app.utils.image_utils import compress_image
 from app.utils.log_utils import save_failed_output
-from models.constants import API_REQUIRED_COLUMNS, IMAGE_CLASSIFICATION_PROMPT, MAX_AI_TRIES, MISSING_FIELDS_PROMPT, OPEN_AI_KEY, REFORMAT_JSON_PROMPT
+from app.models.constants import API_REQUIRED_COLUMNS, IMAGE_CLASSIFICATION_PROMPT, MAX_AI_TRIES, MISSING_FIELDS_PROMPT, OPEN_AI_KEY, REFORMAT_JSON_PROMPT
 from openai import OpenAI
 
 

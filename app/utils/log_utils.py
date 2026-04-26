@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-from models.constants import DATETIME_FORMAT
+from app.models.constants import DATETIME_FORMAT
 
 def save_failed_output(prompt_content):
     """Save failed AI prompt content to disk for manual inspection."""

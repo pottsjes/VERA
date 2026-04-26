@@ -6,7 +6,7 @@ from flask import (
 )
 from app.forms.upload_form import UploadForm
 from app.utils.image_utils import save_image
-from db.db_client import add_item
+from app.db.db_client import add_item
 
 bp = Blueprint('upload', __name__, url_prefix='/upload')
 

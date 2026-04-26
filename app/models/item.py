@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from models.constants import ITEM_TYPE
+from app.models.constants import ITEM_TYPE
 
 class Item():
     def __init__(self, name: str,

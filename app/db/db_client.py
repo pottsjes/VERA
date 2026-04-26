@@ -2,10 +2,13 @@
 import sqlite3
 from datetime import datetime
 from typing import List, Optional
-from models.constants import ITEM_TYPE
-from models.item import Item
+import os
+from app.models.constants import ITEM_TYPE
+from app.models.item import Item
 
-DB_NAME = "wardrobe.db"
+# Resolve wardrobe.db relative to the project root, regardless of CWD
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DB_NAME = os.path.join(_PROJECT_ROOT, "data", "wardrobe.db")
 
 def get_connection():
     return sqlite3.connect(DB_NAME)

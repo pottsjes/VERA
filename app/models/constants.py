@@ -17,8 +17,7 @@ WASHABLE_ITEM_TYPES = [
     ITEM_TYPE.TOP
 ]
 
-WARDROBE_FOLDER = '../wardrobe'
-DB_NAME = 'wardrobe.db'
+WARDROBE_FOLDER = 'wardrobe'
 DATABASE_COLUMNS = [
     "id",
     "name",

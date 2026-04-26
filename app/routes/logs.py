@@ -6,7 +6,7 @@ from flask import (
     request,
 )
 from datetime import datetime
-from models.constants import DATETIME_FORMAT
+from app.models.constants import DATETIME_FORMAT
 
 bp = Blueprint('logs', __name__, url_prefix='/logs')
 

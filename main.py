@@ -1,6 +1,6 @@
 # main.py
 from app import create_app
-import db.db_client as db
+import app.db.db_client as db
 
 if __name__ == "__main__":
     db.init_db()
