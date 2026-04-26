@@ -17,5 +17,8 @@ steps:
       - '--add-cloudsql-instances=vera-494519:us-central1:vera-db'
       - '--set-env-vars=DB_PASS=${_DB_PASS},GCS_BUCKET=vera-wardrobe-images,ANTHROPIC_API_KEY=${_ANTHROPIC_KEY}'
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 images:
   - 'gcr.io/$PROJECT_ID/vera'
