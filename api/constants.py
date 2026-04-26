@@ -1,53 +1,9 @@
-from enum import Enum
-
-DATETIME_FORMAT = "%Y%m%d:%H%M"
-
-class ITEM_TYPE(Enum):
-    TOP = "Top"
-    BOTTOM = "Bottom"
-    ACCESSORY = "Accessory"
-    OUTER = "Outer"
-    SHOE = "Shoe"
-    
-class ITEM_STATUS(Enum):
-    AVAILABLE = 1
-    UNAVAILABLE = 0
-
-WASHABLE_ITEM_TYPES = [
-    ITEM_TYPE.TOP
-]
-
-WARDROBE_FOLDER = 'wardrobe'
-DATABASE_COLUMNS = [
-    "id",
-    "name",
-    "item_type",
-    "description",
-    "tags",
-    "image_path",
-    "available",
-    "last_used",
-    "nfc_tag_id",
-    "fit",
-    "aesthetic",
-    "tone",
-    "layer",
-    "season",
-    "color",
-    "pattern_style",
-    "material",
-    "gender_expression",
-    "formality",
-    "use_case"
-]
-
 API_REQUIRED_COLUMNS = [
-    "name", "item_type", "description", "tags", "fit", "aesthetic", 
-    "tone", "layer", "season", "color", "pattern_style", "material", 
-    "gender_expression", "formality", "use_case"
+    "name", "item_type", "description", "tags", "fit", "aesthetic",
+    "tone", "layer", "season", "color", "pattern_style", "material",
+    "gender_expression", "formality", "use_case",
 ]
 
-MAX_AI_TRIES = 3
 IMAGE_CLASSIFICATION_PROMPT = """You are a fashion wardrobe assistant.
 Analyze the provided clothing image and return a well-formatted JSON object for wardrobe database management.
 Populate the following fields precisely and consistently:
@@ -69,11 +25,3 @@ use_case: Common usage scenarios (e.g., "Everyday Wear", "Work", "Gym", "Date Ni
 
 Output format- Respond only with a single, valid JSON object.
 Do not include explanations, commentary, or Markdown formatting (no ```json blocks)."""
-
-REFORMAT_JSON_PROMPT = """You are a strict formatter. The user attempted to parse the 
-following text as JSON but failed. Please fix any structural errors (such as missing commas,
- brackets, or quotes) and output valid, well-formatted JSON only."""
-
-MISSING_FIELDS_PROMPT = """You are a wardrobe database assistant. The following JSON is
- structurally correct but missing required fields. Please fill in ALL required fields 
- based on the provided wardrobe schema, even if you have to make reasonable assumptions."""

@@ -26,3 +26,10 @@ secrets.json
 # Ignore Selenium WebDriver binaries (if downloaded)
 chromedriver
 geckodriver
+
+# Database and embeddings
+data/wardrobe.db
+wardrobe_embeddings.json
+
+# Ignore local testing context
+vera.json

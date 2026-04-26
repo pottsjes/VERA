@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.git/
+.DS_Store
+*.ipynb
+wardrobe_embeddings.json
+testing.ipynb
+.vscode/

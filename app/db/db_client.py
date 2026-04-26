@@ -69,27 +69,6 @@ def map_item(row):
 def map_items(rows):
     return [map_item(row) for row in rows]
 
-def add_item(item: Item):
-    add_item(
-        name=item.name,
-        item_type=item.item_type.value,
-        description=item.descriptionription,
-        tags=",".join(item.tags or []),
-        image_path=item.image_path,
-        nfc_tag_id=item.nfc_tag_id,
-        fit=item.fit,
-        aesthetic=item.aesthetic,
-        tone=item.tone,
-        layer=item.layer,
-        season=item.season,
-        color=item.color,
-        pattern_style=item.pattern_style,
-        material=item.material,
-        gender_expression=item.gender_expression,
-        formality=item.formality,
-        use_case=item.use_case
-    )
-
 def add_item(name: str, item_type: str, description: str = "", tags: Optional[List[str]] = None,
              image_path: str = "", nfc_tag_id: Optional[str] = None, fit: str = "", aesthetic: str = "",
              tone: str = "", layer: str = "", season: str = "", color: str = "", pattern_style: str = "",
@@ -109,7 +88,7 @@ def add_item(name: str, item_type: str, description: str = "", tags: Optional[Li
 def get_item(item_id: str):
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM items WHERE id = ?", (item_id))
+        cursor.execute("SELECT * FROM items WHERE id = ?", (item_id,))
         result = cursor.fetchall()
         return map_item(result[0])
 
@@ -132,7 +111,7 @@ def update_item(item_id: int, name: str, item_type: str, description: str = "", 
 def delete_item(item_id: int):
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM items WHERE id = ?", (item_id))
+        cursor.execute("DELETE FROM items WHERE id = ?", (item_id,))
         conn.commit()
         
 def list_items(only_available: bool = False):

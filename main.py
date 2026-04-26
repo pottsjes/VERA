@@ -1,8 +1,24 @@
-# main.py
-from app import create_app
-import app.db.db_client as db
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from api.database import init_db
+from api.routes_items import router as items_router
+from api.routes_analyze import router as analyze_router
+from api.routes_wardrobe import router as wardrobe_router
 
-if __name__ == "__main__":
-    db.init_db()
-    app = create_app()
-    app.run(host="0.0.0.0", port=5050, debug=True)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+
+app = FastAPI(title="V.E.R.A.", lifespan=lifespan)
+
+app.include_router(items_router)
+app.include_router(analyze_router)
+app.include_router(wardrobe_router)
+
+
+@app.get("/")
+async def root():
+    return {"name": "V.E.R.A.", "status": "online"}
