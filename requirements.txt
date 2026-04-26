@@ -5,3 +5,4 @@ asyncpg
 python-multipart
 Pillow
 anthropic
+google-cloud-storage
