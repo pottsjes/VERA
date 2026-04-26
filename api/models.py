@@ -1,3 +1,4 @@
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import DeclarativeBase
 
@@ -29,3 +30,4 @@ class Item(Base):
     gender_expression = Column(String, default="")
     formality = Column(String, default="")
     use_case = Column(String, default="")
+    embedding = Column(Vector(768), nullable=True)

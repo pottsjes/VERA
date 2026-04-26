@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from api.database import get_db
+from api.embeddings import generate_item_embedding
 from api.models import Item
 from api.schemas import ItemCreate, ItemResponse, ItemUpdate
 
@@ -39,6 +40,27 @@ def _item_to_response(item: Item) -> ItemResponse:
     )
 
 
+def _apply_data_to_item(item: Item, data) -> None:
+    item.name = data.name
+    item.item_type = data.item_type.value
+    item.description = data.description
+    item.tags = _tags_to_str(data.tags)
+    item.image_path = data.image_path
+    item.available = data.available
+    item.nfc_tag_id = data.nfc_tag_id
+    item.fit = data.fit
+    item.aesthetic = data.aesthetic
+    item.tone = data.tone
+    item.layer = data.layer
+    item.season = data.season
+    item.color = data.color
+    item.pattern_style = data.pattern_style
+    item.material = data.material
+    item.gender_expression = data.gender_expression
+    item.formality = data.formality
+    item.use_case = data.use_case
+
+
 @router.get("/", response_model=List[ItemResponse])
 async def list_items(
     item_type: Optional[str] = None,
@@ -64,26 +86,9 @@ async def get_item(item_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("/", response_model=ItemResponse, status_code=201)
 async def create_item(data: ItemCreate, db: AsyncSession = Depends(get_db)):
-    item = Item(
-        name=data.name,
-        item_type=data.item_type.value,
-        description=data.description,
-        tags=_tags_to_str(data.tags),
-        image_path=data.image_path,
-        available=data.available,
-        nfc_tag_id=data.nfc_tag_id,
-        fit=data.fit,
-        aesthetic=data.aesthetic,
-        tone=data.tone,
-        layer=data.layer,
-        season=data.season,
-        color=data.color,
-        pattern_style=data.pattern_style,
-        material=data.material,
-        gender_expression=data.gender_expression,
-        formality=data.formality,
-        use_case=data.use_case,
-    )
+    item = Item()
+    _apply_data_to_item(item, data)
+    item.embedding = await generate_item_embedding(item)
     db.add(item)
     await db.commit()
     await db.refresh(item)
@@ -95,24 +100,8 @@ async def update_item(item_id: int, data: ItemUpdate, db: AsyncSession = Depends
     item = await db.get(Item, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    item.name = data.name
-    item.item_type = data.item_type.value
-    item.description = data.description
-    item.tags = _tags_to_str(data.tags)
-    item.image_path = data.image_path
-    item.available = data.available
-    item.nfc_tag_id = data.nfc_tag_id
-    item.fit = data.fit
-    item.aesthetic = data.aesthetic
-    item.tone = data.tone
-    item.layer = data.layer
-    item.season = data.season
-    item.color = data.color
-    item.pattern_style = data.pattern_style
-    item.material = data.material
-    item.gender_expression = data.gender_expression
-    item.formality = data.formality
-    item.use_case = data.use_case
+    _apply_data_to_item(item, data)
+    item.embedding = await generate_item_embedding(item)
     await db.commit()
     await db.refresh(item)
     return _item_to_response(item)
@@ -138,3 +127,18 @@ async def toggle_availability(item_id: int, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(item)
     return _item_to_response(item)
+
+
+@router.post("/backfill-embeddings")
+async def backfill_embeddings(db: AsyncSession = Depends(get_db)):
+    """Generate embeddings for all items that don't have one."""
+    result = await db.execute(select(Item).where(Item.embedding == None))
+    items = result.scalars().all()
+    updated = 0
+    for item in items:
+        embedding = await generate_item_embedding(item)
+        if embedding:
+            item.embedding = embedding
+            updated += 1
+    await db.commit()
+    return {"total": len(items), "updated": updated}
