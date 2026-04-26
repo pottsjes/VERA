@@ -1,11 +1,11 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: 'Build'
     args: ['build', '-t', 'gcr.io/$PROJECT_ID/vera', '.']
 
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: 'Push'
     args: ['push', 'gcr.io/$PROJECT_ID/vera']
 
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - name: 'Deploy'
     entrypoint: gcloud
     args:
       - 'run'
@@ -15,7 +15,9 @@ steps:
       - '--region=us-central1'
       - '--allow-unauthenticated'
       - '--add-cloudsql-instances=vera-494519:us-central1:vera-db'
-      - '--set-env-vars=DB_PASS=${_DB_PASS},GCS_BUCKET=vera-wardrobe-images,ANTHROPIC_API_KEY=${_ANTHROPIC_KEY}'
+      - '--set-env-vars=GCS_BUCKET=vera-wardrobe-images'
+      - '--set-secrets=DB_PASS=${_DB_PASS}:latest'
+      - '--set-secrets=ANTHROPIC_API_KEY=${_ANTHROPIC_KEY}:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
