@@ -1,7 +1,7 @@
 from enum import Enum
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ItemType(str, Enum):
@@ -31,6 +31,16 @@ class ItemBase(BaseModel):
     gender_expression: str = ""
     formality: str = ""
     use_case: str = ""
+
+    @field_validator("item_type", mode="before")
+    @classmethod
+    def normalize_item_type(cls, v):
+        if isinstance(v, str):
+            lookup = {t.value.lower(): t for t in ItemType}
+            match = lookup.get(v.lower())
+            if match:
+                return match
+        return v
 
 
 class ItemCreate(ItemBase):
