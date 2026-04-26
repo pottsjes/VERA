@@ -24,8 +24,7 @@ def upload_to_gcs(image_bytes: bytes, filename: str) -> str:
     bucket = client.bucket(GCS_BUCKET)
     blob = bucket.blob(f"wardrobe/{filename}")
     blob.upload_from_string(image_bytes, content_type="image/jpeg")
-    blob.make_public()
-    return blob.public_url
+    return f"https://storage.googleapis.com/{GCS_BUCKET}/wardrobe/{filename}"
 
 
 def _save_local(image_bytes: bytes, filename: str) -> str:
