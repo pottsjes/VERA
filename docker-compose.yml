@@ -16,10 +16,14 @@ services:
       - "8080:8080"
     environment:
       DATABASE_URL: postgresql+asyncpg://vera:vera@db:5432/vera
+      GCS_BUCKET: ""
+      GOOGLE_APPLICATION_CREDENTIALS: /gcp/application_default_credentials.json
+      GCP_PROJECT: vera-494519
     depends_on:
       - db
     volumes:
       - ./wardrobe:/app/wardrobe
+      - ~/.config/gcloud/application_default_credentials.json:/gcp/application_default_credentials.json:ro
 
 volumes:
   pgdata:

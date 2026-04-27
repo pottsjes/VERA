@@ -7,3 +7,5 @@ __pycache__/
 wardrobe_embeddings.json
 testing.ipynb
 .vscode/
+frontend/node_modules/
+frontend/dist/

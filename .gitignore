@@ -33,3 +33,4 @@ wardrobe_embeddings.json
 
 # Ignore local testing context
 vera.json
+wardrobe/
