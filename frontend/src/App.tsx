@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import Browse from './pages/Browse';
 import Upload from './pages/Upload';
+import Edit from './pages/Edit';
 import Recommend from './pages/Recommend';
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -20,6 +21,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Browse />} />
           <Route path="/upload" element={<Upload />} />
+          <Route path="/edit/:id" element={<Edit />} />
           <Route path="/recommend" element={<Recommend />} />
         </Routes>
       </main>

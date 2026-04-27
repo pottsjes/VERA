@@ -37,6 +37,7 @@ export default function Upload() {
         for (const [k, v] of Object.entries(data)) {
           if (k === 'tags' && Array.isArray(v)) newForm[k] = v.join(', ');
           else if (k === 'image_path') setImagePath(v as string);
+          else if (k === 'item_type') newForm[k] = String(v).charAt(0).toUpperCase() + String(v).slice(1).toLowerCase();
           else newForm[k] = String(v);
         }
         setForm(f => ({ ...f, ...newForm }));

@@ -19,6 +19,7 @@ services:
       GCS_BUCKET: ""
       GOOGLE_APPLICATION_CREDENTIALS: /gcp/application_default_credentials.json
       GCP_PROJECT: vera-494519
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     depends_on:
       - db
     volumes:
